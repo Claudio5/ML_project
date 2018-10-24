@@ -1,3 +1,5 @@
 /project1/src/.ipynb_checkpoints
 /project1/src/__pycache__
 /project1/data
+.DS_Store
+/project1/.DS_Store
