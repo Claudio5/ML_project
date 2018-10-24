@@ -32,7 +32,9 @@ def get_split_indexes(x, y, k_fold, seed=1):
 
 def cross_validation(optim_method, loss_function, tx, y, indexes_te, indexes_tr,
                     k_fold, args_optim = (), args_loss = ()):
-    err_tr_list = err_te_list = []
+    err_tr_list = []
+    err_te_list = []
+    accuracy_list = []
     for i in range(k_fold):
         x_te = x[indexes_te[i]]
         y_te = y[indexes_te[i]]
@@ -45,13 +47,18 @@ def cross_validation(optim_method, loss_function, tx, y, indexes_te, indexes_tr,
 
         err_te = loss_function(y, tx, w, *args_loss)
 
+        y_predicted = predict_labels(w, x_te)
+
+        accuracy_list.append(np.sum(np.equal(y_predicted, y_te)/len(y_te)))
+
         err_tr_list.append(err_tr)
         err_te_list.append(err_te)
 
     mse_tr_mean = np.mean(err_tr_list)
     mse_te_mean = np.mean(err_te_list)
+    accuracy_mean = np.mean(accuracy_list)
 
-    return mse_tr_mean, mse_te_mean
+    return mse_tr_mean, mse_te_mean, accuracy_mean
 
 
 def standardize(x_tr, isTestingData = False, x_te = None):
