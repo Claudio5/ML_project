@@ -67,11 +67,3 @@ def standardize(x_tr, isTestingData = False, x_te = None):
         std_data_te = centered_data_te / np.std(centered_data, axis=0)
 
     return std_data, std_data_te
-
-x = np.array([[1,2],[1,3],[1,4],[1,9],[2,8],[1,90]])
-y = np.array([1,4,3,8,6,6])
-ratio = 0.75
-random_seed = np.random.randint(0, 10000)
-
-a,b = get_split_indexes(x,y,3)
-print(a)
