@@ -1,4 +1,5 @@
 import numpy as np
+from proj1_helpers import *
 from implementations import *
 
 def build_poly(x, degree):
@@ -36,19 +37,18 @@ def cross_validation(optim_method, loss_function, tx, y, indexes_te, indexes_tr,
     err_te_list = []
     accuracy_list = []
     for i in range(k_fold):
-        x_te = x[indexes_te[i]]
+        x_te = tx[indexes_te[i]]
         y_te = y[indexes_te[i]]
-        x_tr = x[(indexes_tr[i]).astype(int)]
+        x_tr = tx[(indexes_tr[i]).astype(int)]
         y_tr = y[(indexes_tr[i]).astype(int)]
 
         x_tr, x_te = standardize(x_tr, True, x_te)
 
         w, err_tr = optim_method(y_tr, x_tr, *args_optim)
 
-        err_te = loss_function(y, tx, w, *args_loss)
-
+        err_te = loss_function(y_te, x_te, w, *args_loss)
         y_predicted = predict_labels(w, x_te)
-
+        
         accuracy_list.append(np.sum(np.equal(y_predicted, y_te)/len(y_te)))
 
         err_tr_list.append(err_tr)
