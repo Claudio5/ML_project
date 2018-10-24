@@ -20,13 +20,13 @@ def get_split_indexes(x, y, k_fold, seed=1):
 
     # Generate random indices
     subdivision = int(len(x)/k_fold)
-    num_row = len(y)
-    indices = np.random.permutation(num_row)
+    indices = np.random.permutation(len(y))
+
     index_split_te = list(split_nparts(indices, k_fold))
     index_split_tr = np.zeros((k_fold, len(x) - subdivision))
 
-    for i, ind_te in enumerate(index_split_te):
-        index_split_tr[i,:] = [ind for ind in indices if ind not in list(index_split_te[i])]
+    for i in range(0, k_fold):
+        index_split_tr[i,:] = list(set(range(x.shape[0])) - set(index_split_te[i]))
 
     return index_split_te, index_split_tr
 
