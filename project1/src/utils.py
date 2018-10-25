@@ -41,18 +41,18 @@ def cross_validation(optim_method, loss_function, tx, y, indexes_te, indexes_tr,
         y_te = y[indexes_te[i]]
         x_tr = tx[(indexes_tr[i]).astype(int)]
         y_tr = y[(indexes_tr[i]).astype(int)]
-
-        if not isBuildPoly:
-            x_tr, x_te = standardize(x_tr, True, x_te)
-        else:
-            # Does not take into account the column containing only ones to avoid a std of 0
-            # It happens when we try to add polynomial features
-            x_tr[:,1:], x_te[:,1:] = standardize(x_tr[:,1:], True, x_te[:,1:])
-
+        #
+         if not isBuildPoly:
+             x_tr, x_te = standardize(x_tr, True, x_te)
+         else:
+             # Does not take into account the column containing only ones to avoid a std of 0
+             # It happens when we try to add polynomial features
+             x_tr[:,1:], x_te[:,1:] = standardize(x_tr[:,1:], True, x_te[:,1:])
 
         w, err_tr = optim_method(y_tr, x_tr, *args_optim)
 
         err_te = loss_function(y_te, x_te, w, *args_loss)
+
         y_predicted = predict_labels(w, x_te)
 
         accuracy_list.append(np.sum(np.equal(y_predicted, y_te)/len(y_te)))
@@ -62,12 +62,38 @@ def cross_validation(optim_method, loss_function, tx, y, indexes_te, indexes_tr,
 
     mse_tr_mean = np.mean(err_tr_list)
     mse_te_mean = np.mean(err_te_list)
-    rmse_tr_mean = np.sqrt(2*mse_tr_mean)
-    rmse_te_mean = np.sqrt(2*mse_te_mean)
+    rmse_te_mean = 0
+    rmse_tr_mean = 0
+    if mse_tr_mean >= 0:
+        rmse_tr_mean = np.sqrt(2*mse_tr_mean)
+    if mse_te_mean >= 0:
+        rmse_te_mean = np.sqrt(2*mse_te_mean)
+
     accuracy_mean = np.mean(accuracy_list)
 
     return mse_tr_mean, mse_te_mean, rmse_tr_mean, rmse_te_mean, accuracy_mean
 
+
+def standardize2(x):
+    """Standardize the original data set."""
+    #standardize is done feature by feature to have equal weights.
+    #values that are worth 0 will stay at 0. corrupted data (=-999) are set to 0 earlier
+    mean_x = np.mean(x,axis=0)
+    x = x - np.mean(x,axis=0)*(x!=0)
+    std_x = np.std(x,axis=0)
+    std_x_t = np.std(x,axis=0)*(x!=0)
+    std_x_t[std_x_t==0] = 1
+    x = x / std_x_t
+    return x, mean_x, std_x
+
+def standardize_given(x, mean_x, std_x):
+    """Standardize the original data set with given mean_x and std_x."""
+    x = x - mean_x*(x!=0)
+    std_x_t = std_x*(x!=0)
+    std_x_t[std_x_t==0] = 1
+    x = x / std_x_t
+    x[(x>1000)] = 1000  #handle outliers
+    return x
 
 def standardize(x_tr, isTestingData = False, x_te = None):
     """ Standardize the testing data by substracting the mean and dividing
