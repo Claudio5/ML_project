@@ -32,7 +32,7 @@ def get_split_indexes(x, y, k_fold, seed=1):
     return index_split_te, index_split_tr
 
 def cross_validation(optim_method, loss_function, tx, y, indexes_te, indexes_tr,
-                    k_fold, args_optim = (), args_loss = ()):
+                    k_fold, isBuildPoly = False, args_optim = (), args_loss = ()):
     err_tr_list = []
     err_te_list = []
     accuracy_list = []
@@ -42,13 +42,19 @@ def cross_validation(optim_method, loss_function, tx, y, indexes_te, indexes_tr,
         x_tr = tx[(indexes_tr[i]).astype(int)]
         y_tr = y[(indexes_tr[i]).astype(int)]
 
-        x_tr, x_te = standardize(x_tr, True, x_te)
+        if not isBuildPoly:
+            x_tr, x_te = standardize(x_tr, True, x_te)
+        else:
+            # Does not take into account the column containing only ones to avoid a std of 0
+            # It happens when we try to add polynomial features
+            x_tr[:,1:], x_te[:,1:] = standardize(x_tr[:,1:], True, x_te[:,1:])
+
 
         w, err_tr = optim_method(y_tr, x_tr, *args_optim)
 
         err_te = loss_function(y_te, x_te, w, *args_loss)
         y_predicted = predict_labels(w, x_te)
-        
+
         accuracy_list.append(np.sum(np.equal(y_predicted, y_te)/len(y_te)))
 
         err_tr_list.append(err_tr)
@@ -56,9 +62,11 @@ def cross_validation(optim_method, loss_function, tx, y, indexes_te, indexes_tr,
 
     mse_tr_mean = np.mean(err_tr_list)
     mse_te_mean = np.mean(err_te_list)
+    rmse_tr_mean = np.sqrt(2*mse_tr_mean)
+    rmse_te_mean = np.sqrt(2*mse_te_mean)
     accuracy_mean = np.mean(accuracy_list)
 
-    return mse_tr_mean, mse_te_mean, accuracy_mean
+    return mse_tr_mean, mse_te_mean, rmse_tr_mean, rmse_te_mean, accuracy_mean
 
 
 def standardize(x_tr, isTestingData = False, x_te = None):
