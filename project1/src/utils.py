@@ -1,4 +1,5 @@
 import numpy as np
+from proj1_helpers import *
 from implementations import *
 
 def build_poly(x, degree):
@@ -14,33 +15,62 @@ def split_nparts(array, n):
 
 def get_split_indexes(x, y, k_fold, seed=1):
     """split the dataset based on the split ratio."""
-    # set seed
+
+    # Set seed
     np.random.seed(seed)
-    # generate random indices
+
+    # Generate random indices
     subdivision = int(len(x)/k_fold)
-    num_row = len(y)
-    indices = np.random.permutation(num_row)
+    indices = np.random.permutation(len(y))
+
     index_split_te = list(split_nparts(indices, k_fold))
     index_split_tr = np.zeros((k_fold, len(x) - subdivision))
 
-    for i, ind_te in enumerate(index_split_te):
-        index_split_tr[i,:] = [ind for ind in indices if ind not in list(index_split_te[i])]
+    for i in range(0, k_fold):
+        index_split_tr[i,:] = list(set(range(x.shape[0])) - set(index_split_te[i]))
 
     return index_split_te, index_split_tr
 
-def cross_validation(gradient_func, loss_func, tx, y, indexes_te, indexes_tr, k_fold):
+def cross_validation(optim_method, loss_function, tx, y, indexes_te, indexes_tr,
+                    k_fold, args_optim = (), args_loss = ()):
+    err_tr_list = []
+    err_te_list = []
+    accuracy_list = []
     for i in range(k_fold):
-        x_te = x[indexes_te[i]]
+        x_te = tx[indexes_te[i]]
         y_te = y[indexes_te[i]]
-        x_tr = x[indexes_tr[i]]
-        y_tr = y[indexes_tr[i]]
+        x_tr = tx[(indexes_tr[i]).astype(int)]
+        y_tr = y[(indexes_tr[i]).astype(int)]
+
+        x_tr, x_te = standardize(x_tr, True, x_te)
+
+        w, err_tr = optim_method(y_tr, x_tr, *args_optim)
+
+        err_te = loss_function(y_te, x_te, w, *args_loss)
+        y_predicted = predict_labels(w, x_te)
         
+        accuracy_list.append(np.sum(np.equal(y_predicted, y_te)/len(y_te)))
+
+        err_tr_list.append(err_tr)
+        err_te_list.append(err_te)
+
+    mse_tr_mean = np.mean(err_tr_list)
+    mse_te_mean = np.mean(err_te_list)
+    accuracy_mean = np.mean(accuracy_list)
+
+    return mse_tr_mean, mse_te_mean, accuracy_mean
 
 
-x = np.array([[1,2],[1,3],[1,4],[1,9],[2,8],[1,90]])
-y = np.array([1,4,3,8,6,6])
-ratio = 0.75
-random_seed = np.random.randint(0, 10000)
+def standardize(x_tr, isTestingData = False, x_te = None):
+    """ Standardize the testing data by substracting the mean and dividing
+    by the variance. If isTestingData is true it standardize the testing data
+    only using the training data """
 
-a,b = get_split_indexes(x,y,3)
-print(a)
+    centered_data = x_tr - np.mean(x_tr, axis=0)
+    std_data = centered_data / np.std(centered_data, axis=0)
+
+    if(isTestingData and x_te is not None):
+        centered_data_te = x_te - np.mean(x_tr, axis=0)
+        std_data_te = centered_data_te / np.std(centered_data, axis=0)
+
+    return std_data, std_data_te

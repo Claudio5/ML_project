@@ -24,7 +24,7 @@ def least_squares_GD(y, tx, initial_w, max_iters, gamma):
         # gradient w by descent update
         w = w - gamma * grad
 
-    loss = loss = compute_mse(y, tx, w)
+    loss = compute_mse(y, tx, w)
     return w, loss
 
 def least_squares_SGD(y, tx, initial_w, max_iters, gamma):
