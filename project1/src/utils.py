@@ -56,11 +56,11 @@ def cross_validation(optim_method, loss_function, tx, y, indexes_te, indexes_tr,
 
         if not isBuildPoly:
             #x_tr, x_te = standardize(x_tr, True, x_te)
-            x_tr, x_te = standardize3(x_tr, wrong_value, x_te, True)
+            x_tr, x_te = standardize3(x_tr, 0, x_te, True)
         else:
             # Does not take into account the column containing only ones to avoid a std of 0
             # It happens when we try to add polynomial features
-            x_tr[:,1:], x_te[:,1:] = standardize3(x_tr[:,1:], wrong_value, x_te[:,1:], True)
+            x_tr[:,1:], x_te[:,1:] = standardize3(x_tr[:,1:], 0, x_te[:,1:], True)
 
         # x_tr[:,1:], mean_tr, std_tr = standardize2(x_tr[:,1:])
         # #x_te, mean, std = standardize(x_te)
@@ -130,6 +130,7 @@ def standardize3(x, wrong_value, x_te = [], isTesting = False):
         std_data_tr[:,ind] = mean_tr[:,ind] / np.std(val[x[:,ind] != wrong_value])
         std_tr_list.append(np.std(val[x[:,ind] != wrong_value]))
 
+    std_data_te = []
     if(isTesting and x_te is not None):
         centered_data_te = x_te - mean_tr_list*(x_te != wrong_value)
         std_data_te = centered_data_te / std_tr_list
@@ -137,51 +138,10 @@ def standardize3(x, wrong_value, x_te = [], isTesting = False):
 
     return std_data_tr, std_data_te
 
-def standardize4(x, wrong_value, x_te = [], isTesting = False):
-    mean_tr = x.copy()
-    std_data_tr = mean_tr.copy()
-    mean_tr_list = []
-    std_tr_list = []
+def add_features_cross(x,x_ini):
+    """add crossed features such that every row in x_ini is multiplied by all the other rows
+        of x_ini and added to x"""
 
-    for ind, val in enumerate(x.T):
-        x_cleaned = val[val != wrong_value]
-        if(len(x_cleaned > 0)):
-            mean_tr[:,ind] = x[:,ind] - np.mean(x_cleaned)*(val != wrong_value)
-            mean_tr_list.append(np.mean(x_cleaned))
-        else:
-            mean_tr_list.append(0)
-
-    mean_tr[mean_tr==wrong_value] = 0
-    for ind, val in enumerate(mean_tr.T):
-        std_data_tr[:,ind] = mean_tr[:,ind] / np.std(val[x[:,ind] != wrong_value])
-        std_tr_list.append(np.std(val[x[:,ind] != wrong_value]))
-
-    std_data_te = x_te
-    if(isTesting and x_te is not None):
-        centered_data_te = x_te - mean_tr_list*(x_te != wrong_value)
-        centered_data_te[centered_data_te==wrong_value] = 0
-        std_data_te = centered_data_te / std_tr_list
-        std_data_te[std_data_te > 1000] = 1000
-
-    return std_data_tr, std_data_te
-
-def standardize2(x):
-    """Standardize the original data set."""
-    #standardize is done feature by feature to have equal weights.
-    #values that are worth 0 will stay at 0. corrupted data (=-999) are set to 0 earlier
-    mean_x = np.mean(x,axis=0)
-    x = x - np.mean(x,axis=0)*(x!=0)
-    std_x = np.std(x,axis=0)
-    std_x_t = np.std(x,axis=0)*(x!=0)
-    std_x_t[std_x_t==0] = 1
-    x = x / std_x_t
-    return x, mean_x, std_x
-
-def standardize_given2(x, mean_x, std_x):
-    """Standardize the original data set with given mean_x and std_x."""
-    x = x - mean_x*(x!=0)
-    std_x_t = std_x*(x!=0)
-    std_x_t[std_x_t==0] = 1
-    x = x / std_x_t
-    x[(x>1000)] = 1000  #handle outliers
+    for i in range(x_ini.shape[1]):
+        x= np.column_stack((x, x_ini[:,i][:,None]*x_ini[:,i+1:]))
     return x

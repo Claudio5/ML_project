@@ -13,14 +13,14 @@ testing_data[testing_data==-999] = 0
 training_data[:,22] += 1
 testing_data[:,22] += 1
 
-poly_degree = 15
+poly_degree = 12
 x_tr = build_poly(training_data, poly_degree)
+#x_tr = add_features_cross(x_tr, training_data)
 x_te = build_poly(testing_data, poly_degree)
+#x_te = add_features_cross(x_te, testing_data)
 initial_w = np.zeros(x_tr.shape[1])
 lambda_ = 1e-15
 
-#x_tr[:,1:], mean_tr, std_tr = standardize2(x_tr[:,1:])
-#x_te[:,1:] = standardize_given2(x_te[:,1:], mean_tr, std_tr)
 x_tr[:,1:], x_te[:,1:] = standardize3(x_tr[:,1:], 0, x_te[:,1:], True)
 
 w, err = ridge_regression(training_pred, x_tr, lambda_)
