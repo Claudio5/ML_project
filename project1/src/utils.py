@@ -3,7 +3,6 @@ from proj1_helpers import *
 from implementations import *
 
 wrong_value = -999
-MAX_SEED = 100000
 
 def build_poly(x, degree):
     """Polynomial basis functions for input data x"""
@@ -21,7 +20,6 @@ def get_split_indexes(x, y, k_fold):
     """Get the indexes of the dataset for training and for testing"""
 
     # Generate a random seed everytime we run the function
-    seed = np.random.randint(0,MAX_SEED)
     np.random.seed(1)
 
     # Length of eaxh subdivision
@@ -55,12 +53,11 @@ def cross_validation(optim_method, loss_function, tx, y, indexes_te, indexes_tr,
         y_tr = y[(indexes_tr[i]).astype(int)]
 
         if not isBuildPoly:
-            #x_tr, x_te = standardize(x_tr, True, x_te)
-            x_tr, x_te = standardize3(x_tr, 0, x_te, True)
+            x_tr, x_te = standardize(x_tr, 0, x_te, True)
         else:
             # Does not take into account the column containing only ones to avoid a std of 0
             # It happens when we try to add polynomial features
-            x_tr[:,1:], x_te[:,1:] = standardize3(x_tr[:,1:], 0, x_te[:,1:], True)
+            x_tr[:,1:], x_te[:,1:] = standardize(x_tr[:,1:], 0, x_te[:,1:], True)
 
         # x_tr[:,1:], mean_tr, std_tr = standardize2(x_tr[:,1:])
         # #x_te, mean, std = standardize(x_te)
@@ -93,7 +90,7 @@ def cross_validation(optim_method, loss_function, tx, y, indexes_te, indexes_tr,
 
     return mse_tr_mean, mse_te_mean, rmse_tr_mean, rmse_te_mean, accuracy_mean
 
-def standardize(x_tr, isTestingData = False, x_te = None):
+def standardize3(x_tr, isTestingData = False, x_te = None):
     """ Standardize the testing data by substracting the mean and dividing
     by the variance. If isTestingData is true it standardize the testing data
     only using the training data """
@@ -107,7 +104,7 @@ def standardize(x_tr, isTestingData = False, x_te = None):
 
     return std_data, std_data_te
 
-def standardize3(x, wrong_value, x_te = [], isTesting = False):
+def standardize(x, wrong_value, x_te = [], isTesting = False):
     """Standardize data by not taking into account in the statistics
     the 0's in the data"""
     mean_tr = x.copy()
