@@ -8,20 +8,30 @@ from utils import *
 training_pred, training_data, ids_tr = load_csv_data("../data/train.csv")
 testing_pred, testing_data, ids_te = load_csv_data("../data/test.csv")
 
+# Put the erronous data to 0
 training_data[training_data==-999] = 0
 testing_data[testing_data==-999] = 0
+
+# Categoritical data, we add 1 to avoid 0 label
 training_data[:,22] += 1
 testing_data[:,22] += 1
 
-poly_degree = 12
-x_tr = build_poly(training_data, poly_degree)
-#x_tr = add_features_cross(x_tr, training_data)
-x_te = build_poly(testing_data, poly_degree)
-#x_te = add_features_cross(x_te, testing_data)
-initial_w = np.zeros(x_tr.shape[1])
-lambda_ = 1e-15
+# For the values to be different from 0 before the standardization
+training_data[:,12] += 0.0000001
+testing_data[:,12] += 0.0000001
 
-x_tr[:,1:], x_te[:,1:] = standardize3(x_tr[:,1:], 0, x_te[:,1:], True)
+# Deleting features
+training_data = np.delete(training_data, 29, axis = 1)
+training_data = np.delete(training_data, 28, axis = 1)
+testing_data = np.delete(testing_data, 29, axis = 1)
+testing_data = np.delete(testing_data, 28, axis = 1)
+
+poly_degree = 16
+lambda_ = 1e-15
+x_tr = build_poly(training_data, poly_degree)
+x_te = build_poly(testing_data, poly_degree)
+
+x_tr[:,1:], x_te[:,1:] = standardize(x_tr[:,1:], 0, x_te[:,1:], True)
 
 w, err = ridge_regression(training_pred, x_tr, lambda_)
 
