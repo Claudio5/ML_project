@@ -42,7 +42,7 @@ def cross_validation(optim_method, loss_function, tx, y, indexes_te, indexes_tr,
         err_tr_list.append(err_tr)
         err_te_list.append(err_te)
 
-    # Compute the final statistics
+    # Compute the final statistics taking the mean of the computed means
     mse_tr_mean = np.mean(err_tr_list)
     mse_te_mean = np.mean(err_te_list)
     rmse_tr_mean = np.sqrt(2*mse_tr_mean)

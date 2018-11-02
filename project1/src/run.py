@@ -6,6 +6,7 @@ from implementations import *
 from utils import *
 
 wrong_value = -999
+epsilon = 0.0000001
 
 training_pred, training_data, ids_tr = load_csv_data("../data/train.csv")
 testing_pred, testing_data, ids_te = load_csv_data("../data/test.csv")
@@ -19,8 +20,8 @@ training_data[:,22] += 1
 testing_data[:,22] += 1
 
 # For the values to be different from 0 before the standardization
-training_data[:,12] += 0.0000001
-testing_data[:,12] += 0.0000001
+training_data[:,12] += epsilon
+testing_data[:,12] += epsilon
 
 # Deleting features
 training_data = np.delete(training_data, 29, axis = 1)
