@@ -4,7 +4,7 @@ import pickle
 
 def main():
     vocab = dict()
-    with open('vocab_cut.txt') as f:
+    with open('../preprocess_data/vocab_cut_full.txt') as f:
         for idx, line in enumerate(f):
             vocab[line.strip()] = idx
 
